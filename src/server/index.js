@@ -4,7 +4,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const auth = require("./middlewares/auth");
 const { generalError, notFoundError } = require("./middlewares/errors");
-const usersRouter = require("./routes/users");
+const usersRouter = require("./routes/usersRouter");
 const { authUserRequestSchema } = require("./schemas/usersSchemas");
 
 const app = express();
