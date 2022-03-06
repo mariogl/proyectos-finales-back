@@ -17,13 +17,14 @@ const generalError = (
   next
 ) => {
   debug(chalk.red(error.message));
+
   if (error instanceof ValidationError) {
     debug(chalk.red(error.details));
   }
 
   const errorResponse = {
     statusCode: error.statusCode ?? 500,
-    message: error.statusCode !== 500 ? error.message : "General server error",
+    message: error.statusCode ? error.message : "General server error",
   };
 
   res
