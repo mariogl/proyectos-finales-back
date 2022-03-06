@@ -1,7 +1,7 @@
 const express = require("express");
+const { validate } = require("express-validation");
 const helmet = require("helmet");
 const morgan = require("morgan");
-const { validate } = require("../database/models/User");
 const auth = require("./middlewares/auth");
 const { generalError, notFoundError } = require("./middlewares/errors");
 const usersRouter = require("./routes/users");
