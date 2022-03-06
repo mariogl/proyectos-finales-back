@@ -16,7 +16,16 @@ const loginUserRequestSchema = {
   }),
 };
 
+const authUserRequestSchema = {
+  headers: Joi.object({
+    authorization: Joi.string()
+      .regex(/^Bearer [A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*$/)
+      .required(),
+  }).unknown(),
+};
+
 module.exports = {
   loginUserRequestSchema,
   registerUserRequestSchema,
+  authUserRequestSchema,
 };
