@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../../database/models/User");
-const { loginUser } = require("./users");
+const { loginUser, registerUser } = require("./users");
 
 jest.mock("bcrypt");
 jest.mock("jsonwebtoken");
@@ -78,6 +78,56 @@ describe("Given a loginUser controller", () => {
       bcrypt.compare = jest.fn().mockResolvedValue(false);
 
       await loginUser(req, null, next);
+
+      expect(next).toHaveBeenCalledWith(expectedError);
+    });
+  });
+});
+
+describe("Given a registerUser controller", () => {
+  describe("When it's invoked with a new user", () => {
+    test("Then it should call method status with 201 and method json with {}", async () => {
+      const req = {
+        body: {
+          username: "new-user",
+          password: "new-user",
+          name: "New User",
+        },
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      };
+      const status = 201;
+      bcrypt.hash = jest.fn().mockReturnValue("hashedpassword");
+      User.create = jest.fn().mockResolvedValue();
+
+      await registerUser(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(status);
+      expect(res.json).toHaveBeenCalledWith({});
+    });
+  });
+
+  describe("When it's invoked with an existent user", () => {
+    test("Then it should call method next with a 409 error with 'User already exists' message", async () => {
+      const req = {
+        body: {
+          username: "existing-user",
+          password: "existing-user",
+          name: "Existing User",
+        },
+      };
+
+      bcrypt.hash = jest.fn().mockReturnValue("hashedpassword");
+      User.create = jest.fn().mockRejectedValue();
+      const next = jest.fn();
+      const expectedError = {
+        statusCode: 409,
+        message: "User already exists",
+      };
+
+      await registerUser(req, null, next);
 
       expect(next).toHaveBeenCalledWith(expectedError);
     });
