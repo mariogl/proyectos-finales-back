@@ -9,4 +9,14 @@ const registerUserRequestSchema = {
   }),
 };
 
-module.exports = registerUserRequestSchema;
+const loginUserRequestSchema = {
+  body: Joi.object({
+    username: Joi.string().required(),
+    password: Joi.string().required(),
+  }),
+};
+
+module.exports = {
+  loginUserRequestSchema,
+  registerUserRequestSchema,
+};
