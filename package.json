@@ -6,7 +6,7 @@
   "scripts": {
     "prepare": "husky install",
     "start": "node src",
-    "start-dev": "nodemon dist -q",
+    "start-dev": "nodemon src -q",
     "test": "jest --passWithNoTests",
     "test-ci": "jest --passWithNoTests",
     "test-dev": "jest --watchAll"

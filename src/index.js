@@ -1,10 +1,8 @@
 require("dotenv").config();
 const debug = require("debug")("proyectos-api:server:initialize");
 const chalk = require("chalk");
-const express = require("express");
+const app = require("./server");
 const initializeServer = require("./server/initializeServer");
-
-const app = express();
 
 const port = +process.env.PORT || 4000;
 
