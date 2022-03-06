@@ -1,3 +1,6 @@
+require("dotenv").config();
+const debug = require("debug")("proyectos-api:server:middlewares:errors");
+const chalk = require("chalk");
 const createCustomError = require("../utils/errors");
 
 const notFoundError = (req, res, next) => {
@@ -12,6 +15,8 @@ const generalError = (
   // eslint-disable-next-line no-unused-vars
   next
 ) => {
+  debug(chalk.red(error.message));
+
   const errorResponse = {
     statusCode: error.statusCode ?? 500,
     message: error.statusCode !== 500 ? error.message : "General server error",
