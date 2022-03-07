@@ -1,4 +1,4 @@
-const createCustomError = (message, statusCode = 500) => ({
+const createCustomError = (message, statusCode) => ({
   message,
   statusCode,
 });
