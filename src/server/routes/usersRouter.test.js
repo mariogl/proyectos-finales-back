@@ -79,7 +79,7 @@ describe("Given a /users/register endpoint", () => {
 
 describe("Given a /users/login endpoint", () => {
   describe("When it receives a POST request with right credentials", () => {
-    test.skip("Then it should respond with a 200 status and a token", async () => {
+    test("Then it should respond with a 200 status and a token", async () => {
       const path = "/users/login";
       const user = {
         username: existingUser.username,
@@ -94,7 +94,7 @@ describe("Given a /users/login endpoint", () => {
   });
 
   describe("When it receives a POST request with wrong username", () => {
-    test.only("Then it should respond with a 401 status and a 'Wrong credentials' error", async () => {
+    test("Then it should respond with a 401 status and a 'Wrong credentials' error", async () => {
       const path = "/users/login";
       const user = {
         username: "doesnt-exist",
