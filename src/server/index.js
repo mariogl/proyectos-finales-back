@@ -16,7 +16,7 @@ app.use(express.json());
 
 app.use("/users", usersRouter);
 app.use(validate(authUserRequestSchema), auth);
-app.get("/projects", projectsRouter);
+app.use("/projects", projectsRouter);
 
 app.use(notFoundError);
 app.use(generalError);
