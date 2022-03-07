@@ -6,6 +6,9 @@ jobs:
   test:
     name: Test passes
     runs-on: ubuntu-latest
+    env:
+      BCRYPT_SALTS: ${{ secrets.BCRYPT_SALTS }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
     steps:
       - name: Git checkout
