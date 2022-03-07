@@ -56,11 +56,30 @@ describe("Given a /users/register endpoint", () => {
       expect(body).toEqual({});
     });
   });
+
+  describe("When it receives a POST request with an existent user", () => {
+    test("Then it should respond with a 409 status and a 'User already exists' error", async () => {
+      const path = "/users/register";
+      const newUser = {
+        name: "A new user",
+        username: existingUser.username,
+        password: "a-new-user-pwd",
+      };
+      const expectedResponse = {
+        error: true,
+        message: "User already exists",
+      };
+
+      const { body } = await request(app).post(path).send(newUser).expect(409);
+
+      expect(body).toEqual(expectedResponse);
+    });
+  });
 });
 
 describe("Given a /users/login endpoint", () => {
   describe("When it receives a POST request with right credentials", () => {
-    test("Then it should respond with a 200 status and a token", async () => {
+    test.skip("Then it should respond with a 200 status and a token", async () => {
       const path = "/users/login";
       const user = {
         username: existingUser.username,
@@ -75,7 +94,7 @@ describe("Given a /users/login endpoint", () => {
   });
 
   describe("When it receives a POST request with wrong username", () => {
-    test("Then it should respond with a 401 status and a 'Wrong credentials' error", async () => {
+    test.only("Then it should respond with a 401 status and a 'Wrong credentials' error", async () => {
       const path = "/users/login";
       const user = {
         username: "doesnt-exist",
@@ -105,6 +124,21 @@ describe("Given a /users/login endpoint", () => {
       };
 
       const { body } = await request(app).post(path).send(user).expect(401);
+
+      expect(body).toEqual(expectedResponse);
+    });
+  });
+
+  describe("When it receives a POST request without data", () => {
+    test("Then it should respond with a 400 status and a 'Validation Failed' error", async () => {
+      const path = "/users/login";
+
+      const expectedResponse = {
+        error: true,
+        message: "Validation Failed",
+      };
+
+      const { body } = await request(app).post(path).expect(400);
 
       expect(body).toEqual(expectedResponse);
     });

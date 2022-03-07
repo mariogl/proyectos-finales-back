@@ -7,7 +7,7 @@
     "prepare": "husky install",
     "start": "node src",
     "start-dev": "nodemon src -q",
-    "test-ci": "jest src --passWithNoTests",
+    "test-ci": "jest src/server/routes/usersRouter.test.js",
     "test-dev": "jest src --watchAll",
     "test-coverage": "jest src --watchAll --coverage"
   },
