@@ -10,8 +10,10 @@ const ProjectSchema = new Schema({
     type: String,
     required: true,
   },
-  trello: {
-    type: String,
+  trello: String,
+  repo: {
+    back: String,
+    front: String,
   },
 });
 
