@@ -19,7 +19,6 @@ const UserSchema = new Schema({
     minlength: userDataMinimums.password,
   },
 });
-
 const User = model("User", UserSchema, "users");
 
 module.exports = User;

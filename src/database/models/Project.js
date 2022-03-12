@@ -10,6 +10,10 @@ const ProjectSchema = new Schema({
     type: String,
     required: true,
   },
+  tutor: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
   trello: String,
   repo: {
     back: String,

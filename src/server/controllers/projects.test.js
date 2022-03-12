@@ -12,7 +12,8 @@ describe("Given a getAllProjects controller", () => {
       const expectedProjects = { projects: [] };
 
       Project.find = jest.fn().mockReturnThis();
-      Project.sort = jest.fn().mockResolvedValue(expectedProjects.projects);
+      Project.sort = jest.fn().mockReturnThis();
+      Project.populate = jest.fn().mockResolvedValue(expectedProjects.projects);
 
       await getAllProjects(null, res);
 
