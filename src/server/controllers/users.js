@@ -42,7 +42,9 @@ const loginUser = async (req, res, next) => {
     name: existingUser.name,
   };
 
-  const token = jwt.sign(userData, process.env.JWT_SECRET, { expiresIn: "2d" });
+  const token = jwt.sign(userData, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
 
   return res.json({ token });
 };
