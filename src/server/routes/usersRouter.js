@@ -1,6 +1,7 @@
 const express = require("express");
 const { validate } = require("express-validation");
-const { registerUser, loginUser } = require("../controllers/users");
+const { registerUser, loginUser, getUsers } = require("../controllers/users");
+const auth = require("../middlewares/auth");
 const {
   registerUserRequestSchema,
   loginUserRequestSchema,
@@ -15,5 +16,6 @@ usersRouter.post(
 );
 
 usersRouter.post("/login", validate(loginUserRequestSchema), loginUser);
+usersRouter.get("/", auth, getUsers);
 
 module.exports = usersRouter;
