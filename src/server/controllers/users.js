@@ -49,7 +49,13 @@ const loginUser = async (req, res, next) => {
   return res.json({ token });
 };
 
+const getUsers = async (req, res) => {
+  const users = await User.find().select("name");
+  res.json(users);
+};
+
 module.exports = {
   loginUser,
   registerUser,
+  getUsers,
 };
