@@ -1,4 +1,6 @@
 require("dotenv").config();
+const debug = require("debug")("proyectos-api:server:controllers:projects");
+const { exec } = require("child_process");
 const axios = require("axios");
 const Project = require("../../database/models/Project");
 
@@ -44,8 +46,8 @@ const getProjectSonarData = async (req, res, next) => {
       `${process.env.SONARQUBE_API}measures/component?component=${projectKey}&metricKeys=code_smells,coverage`,
       {
         auth: {
-          username: "admin",
-          password: "admin",
+          username: process.env.SONARQUBE_USERNAME,
+          password: process.env.SONARQUBE_PASSWORD,
         },
       }
     );
@@ -53,13 +55,31 @@ const getProjectSonarData = async (req, res, next) => {
       codeSmells: measures[1].value,
       coverage: measures[0].value,
     });
-  } catch (error) {
+  } catch {
+    const error = new Error("SonarQube validation error");
+    error.statusCode = 401;
     next(error);
   }
+};
+
+const triggerSonarScanner = (req, res) => {
+  exec(
+    "sonar-scanner.bat",
+    {
+      cwd: "C:\\formaciones\\skylab-coders\\202110\\week9\\proyectos-finales\\back\\adam",
+    },
+    (error, stdout) => {
+      if (!error) {
+        debug(stdout);
+        res.json({ scanner: "ok" });
+      }
+    }
+  );
 };
 
 module.exports = {
   getAllProjects,
   createProject,
   getProjectSonarData,
+  triggerSonarScanner,
 };
