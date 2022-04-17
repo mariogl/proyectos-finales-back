@@ -7,6 +7,7 @@ const morgan = require("morgan");
 const auth = require("./middlewares/auth");
 const { generalError, notFoundError } = require("./middlewares/errors");
 const projectsRouter = require("./routes/projectsRouter");
+const challengesRouter = require("./routes/challengesRouter");
 const usersRouter = require("./routes/usersRouter");
 const { authUserRequestSchema } = require("./schemas/usersSchemas");
 
@@ -23,6 +24,7 @@ app.use(express.json());
 
 app.use("/users", usersRouter);
 app.use(validate(authUserRequestSchema), auth);
+app.use("/challenges", challengesRouter);
 app.use("/projects", projectsRouter);
 
 app.use(notFoundError);
