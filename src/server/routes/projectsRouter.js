@@ -1,6 +1,6 @@
 const express = require("express");
 const {
-  getAllProjects,
+  getProjects,
   createProject,
   getProjectSonarData,
   triggerSonarScanner,
@@ -8,7 +8,7 @@ const {
 
 const projectsRouter = express.Router();
 
-projectsRouter.get("/", getAllProjects);
+projectsRouter.get("/:challengeId", getProjects);
 projectsRouter.post("/", createProject);
 projectsRouter.get("/sonardata", getProjectSonarData);
 projectsRouter.post("/sonarscanner", triggerSonarScanner);

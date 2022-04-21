@@ -6,10 +6,9 @@ const ProjectSchema = new Schema({
     unique: true,
     required: true,
   },
-  folder: {
-    type: String,
-    unique: true,
-    required: true,
+  challenge: {
+    type: Schema.Types.ObjectId,
+    ref: "Challenge",
   },
   student: {
     type: String,
