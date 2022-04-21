@@ -4,8 +4,9 @@ const { exec } = require("child_process");
 const axios = require("axios");
 const Project = require("../../database/models/Project");
 
-const getAllProjects = async (req, res) => {
-  const projects = await Project.find()
+const getProjects = async (req, res) => {
+  const { challengeId } = req.params;
+  const projects = await Project.find({ challenge: challengeId })
     .sort({ student: 1 })
     .populate("tutor", "-password -username");
 
@@ -15,14 +16,16 @@ const getAllProjects = async (req, res) => {
 };
 
 const createProject = async (req, res) => {
-  const { name, student, trello, tutor } = req.body;
+  const { challenge, name, student, trello, tutor, folder } = req.body;
 
   const slug = student.replaceAll(" ", "-");
 
   const createdProject = await Project.create({
+    challenge,
     name,
     student,
     trello,
+    folder,
     repo: {
       front: `${slug}_Front-${process.env.GIT_REPO_SUFIX}`,
       back: `${slug}_Back-${process.env.GIT_REPO_SUFIX}`,
@@ -78,7 +81,7 @@ const triggerSonarScanner = (req, res) => {
 };
 
 module.exports = {
-  getAllProjects,
+  getProjects,
   createProject,
   getProjectSonarData,
   triggerSonarScanner,
