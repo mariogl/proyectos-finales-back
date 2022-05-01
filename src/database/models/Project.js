@@ -23,6 +23,10 @@ const ProjectSchema = new Schema({
     back: String,
     front: String,
   },
+  prod: {
+    back: String,
+    front: String,
+  },
 });
 
 const Project = model("Project", ProjectSchema, "projects");

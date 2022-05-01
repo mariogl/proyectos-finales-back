@@ -1,4 +1,4 @@
-const usernameMinLength = 6;
+const usernameMinLength = 5;
 const userpasswordMinLength = 7;
 const userNameMinLength = 2;
 
