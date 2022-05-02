@@ -3,11 +3,12 @@ const debug = require("debug")("proyectos-api:server:controllers:projects");
 const chalk = require("chalk");
 const { exec, execSync } = require("child_process");
 const axios = require("axios");
+const path = require("path");
 const Project = require("../../database/models/Project");
 
 const basedir = process.env.BASE_DIR;
-const basedirBack = `${basedir}back\\`;
-const basedirFront = `${basedir}front\\`;
+const basedirBack = path.join(basedir, "back");
+const basedirFront = path.join(basedir, "front");
 
 const getProjects = async (req, res) => {
   const { challengeId } = req.params;
@@ -90,7 +91,7 @@ const trigerPullProject = (project) =>
     try {
       if (project.repo.back) {
         debug(chalk.green(`Ejecutando git pull en back: ${project.name}`));
-        process.chdir(`${basedirBack}${project.name}`);
+        process.chdir(path.join(basedirBack, project.name));
         const stdoutPullBack = execSync("git pull", {
           encoding: "utf-8",
         });
@@ -109,7 +110,7 @@ const trigerPullProject = (project) =>
 
       if (project.repo.front) {
         debug(chalk.green(`Ejecutando git pull en front: ${project.name}`));
-        process.chdir(`${basedirFront}${project.name}`);
+        process.chdir(path.join(basedirFront, project.name));
         const stdoutPullFront = execSync("git pull", {
           encoding: "utf-8",
         });
