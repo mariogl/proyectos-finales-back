@@ -52,17 +52,32 @@ const getProjectSonarData = async (req, res, next) => {
         component: { measures },
       },
     } = await axios.get(
-      `${process.env.SONARQUBE_API}measures/component?component=${projectKey}&metricKeys=code_smells,coverage`,
-      {
-        auth: {
-          username: process.env.SONARQUBE_USERNAME,
-          password: process.env.SONARQUBE_PASSWORD,
-        },
-      }
+      `https://sonarcloud.io/api/measures/component?component=${projectKey}&metricKeys=sqale_index,code_smells,bugs,vulnerabilities,security_hotspots,coverage`
     );
+    const debt = measures.find(
+      (measure) => measure.metric === "sqale_index"
+    ).value;
+    const codeSmells = measures.find(
+      (measure) => measure.metric === "code_smells"
+    ).value;
+    const bugs = measures.find((measure) => measure.metric === "bugs").value;
+    const vulnerabilities = measures.find(
+      (measure) => measure.metric === "vulnerabilities"
+    ).value;
+    const coverage = measures.find(
+      (measure) => measure.metric === "coverage"
+    ).value;
+    const securityHotspots = measures.find(
+      (measure) => measure.metric === "security_hotspots"
+    ).value;
+
     res.json({
-      codeSmells: measures[1].value,
-      coverage: measures[0].value,
+      debt,
+      codeSmells,
+      bugs,
+      vulnerabilities,
+      securityHotspots,
+      coverage,
     });
   } catch {
     const error = new Error("SonarQube validation error");
