@@ -21,6 +21,20 @@ const getProjects = async (req, res) => {
   });
 };
 
+const getProjectsByTutor = async (req, res) => {
+  const { challengeId, tutorId } = req.params;
+  const projects = await Project.find({
+    challenge: challengeId,
+    tutor: tutorId,
+  })
+    .sort({ student: 1 })
+    .populate("tutor", "-password -username");
+
+  res.json({
+    projects,
+  });
+};
+
 const createProject = async (req, res) => {
   const { challenge, name, student, trello, tutor, folder } = req.body;
 
@@ -185,6 +199,7 @@ const triggerPull = async (req, res, next) => {
 
 module.exports = {
   getProjects,
+  getProjectsByTutor,
   createProject,
   getProjectSonarData,
   triggerSonarScanner,
