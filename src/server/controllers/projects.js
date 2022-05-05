@@ -1,7 +1,7 @@
 require("dotenv").config();
 const debug = require("debug")("proyectos-api:server:controllers:projects");
 const chalk = require("chalk");
-const { exec, execSync } = require("child_process");
+const { execSync } = require("child_process");
 const axios = require("axios");
 const path = require("path");
 const Project = require("../../database/models/Project");
@@ -11,27 +11,60 @@ const basedirBack = path.join(basedir, "back");
 const basedirFront = path.join(basedir, "front");
 
 const getProjects = async (req, res) => {
-  const { challengeId } = req.params;
-  const projects = await Project.find({ challenge: challengeId })
-    .sort({ student: 1 })
-    .populate("tutor", "-password -username");
-
-  res.json({
-    projects,
-  });
-};
-
-const getProjectsByTutor = async (req, res) => {
   const { challengeId, tutorId } = req.params;
-  const projects = await Project.find({
-    challenge: challengeId,
-    tutor: tutorId,
-  })
+  const query = { challenge: challengeId };
+  if (tutorId) {
+    query.tutor = tutorId;
+  }
+  const projects = await Project.find(query)
     .sort({ student: 1 })
-    .populate("tutor", "-password -username");
+    .populate("tutor", "-password -username")
+    .lean();
+
+  const projectsPromises = [];
+
+  projects.forEach((project) => {
+    projectsPromises.push(
+      axios.get(
+        `https://sonarcloud.io/api/measures/component?component=${project.sonarKey.front}&metricKeys=sqale_index,code_smells,bugs,vulnerabilities,security_hotspots,coverage`
+      )
+    );
+  });
+
+  const projectsMeasures = await Promise.all(projectsPromises);
 
   res.json({
-    projects,
+    projects: projects.map((project, position) => {
+      const { measures } = projectsMeasures[position].data.component;
+      const debt = measures.find(
+        (measure) => measure.metric === "sqale_index"
+      ).value;
+      const codeSmells = measures.find(
+        (measure) => measure.metric === "code_smells"
+      ).value;
+      const bugs = measures.find((measure) => measure.metric === "bugs").value;
+      const vulnerabilities = measures.find(
+        (measure) => measure.metric === "vulnerabilities"
+      ).value;
+      const coverage = measures.find(
+        (measure) => measure.metric === "coverage"
+      ).value;
+      const securityHotspots = measures.find(
+        (measure) => measure.metric === "security_hotspots"
+      ).value;
+
+      return {
+        ...project,
+        sonarInfo: {
+          debt,
+          codeSmells,
+          bugs,
+          vulnerabilities,
+          securityHotspots,
+          coverage,
+        },
+      };
+    }),
   });
 };
 
@@ -56,63 +89,6 @@ const createProject = async (req, res) => {
   res.json({
     project: createdProject,
   });
-};
-
-const getProjectSonarData = async (req, res, next) => {
-  const { projectKey } = req.query;
-  try {
-    const {
-      data: {
-        component: { measures },
-      },
-    } = await axios.get(
-      `https://sonarcloud.io/api/measures/component?component=${projectKey}&metricKeys=sqale_index,code_smells,bugs,vulnerabilities,security_hotspots,coverage`
-    );
-    const debt = measures.find(
-      (measure) => measure.metric === "sqale_index"
-    ).value;
-    const codeSmells = measures.find(
-      (measure) => measure.metric === "code_smells"
-    ).value;
-    const bugs = measures.find((measure) => measure.metric === "bugs").value;
-    const vulnerabilities = measures.find(
-      (measure) => measure.metric === "vulnerabilities"
-    ).value;
-    const coverage = measures.find(
-      (measure) => measure.metric === "coverage"
-    ).value;
-    const securityHotspots = measures.find(
-      (measure) => measure.metric === "security_hotspots"
-    ).value;
-
-    res.json({
-      debt,
-      codeSmells,
-      bugs,
-      vulnerabilities,
-      securityHotspots,
-      coverage,
-    });
-  } catch {
-    const error = new Error("SonarQube validation error");
-    error.statusCode = 401;
-    next(error);
-  }
-};
-
-const triggerSonarScanner = (req, res) => {
-  exec(
-    "sonar-scanner.bat",
-    {
-      cwd: "C:\\formaciones\\skylab-coders\\202110\\week9\\proyectos-finales\\back\\adam",
-    },
-    (error, stdout) => {
-      if (!error) {
-        debug(stdout);
-        res.json({ scanner: "ok" });
-      }
-    }
-  );
 };
 
 const trigerPullProject = (project) =>
@@ -199,9 +175,6 @@ const triggerPull = async (req, res, next) => {
 
 module.exports = {
   getProjects,
-  getProjectsByTutor,
   createProject,
-  getProjectSonarData,
-  triggerSonarScanner,
   triggerPull,
 };

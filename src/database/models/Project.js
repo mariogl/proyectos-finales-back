@@ -27,6 +27,10 @@ const ProjectSchema = new Schema({
     back: String,
     front: String,
   },
+  sonarKey: {
+    back: String,
+    front: String,
+  },
 });
 
 const Project = model("Project", ProjectSchema, "projects");
