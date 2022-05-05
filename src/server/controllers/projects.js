@@ -12,10 +12,12 @@ const basedirFront = path.join(basedir, "front");
 
 const getProjects = async (req, res) => {
   const { challengeId, tutorId } = req.params;
+  const { byCoverage } = req.query;
   const query = { challenge: challengeId };
   if (tutorId) {
     query.tutor = tutorId;
   }
+
   const projects = await Project.find(query)
     .sort({ student: 1 })
     .populate("tutor", "-password -username")
@@ -32,39 +34,52 @@ const getProjects = async (req, res) => {
   });
 
   const projectsMeasures = await Promise.all(projectsPromises);
+  let resultProjects = projects.map((project, position) => {
+    const { measures } = projectsMeasures[position].data.component;
+    const debt = measures.find(
+      (measure) => measure.metric === "sqale_index"
+    ).value;
+    const codeSmells = measures.find(
+      (measure) => measure.metric === "code_smells"
+    ).value;
+    const bugs = measures.find((measure) => measure.metric === "bugs").value;
+    const vulnerabilities = measures.find(
+      (measure) => measure.metric === "vulnerabilities"
+    ).value;
+    const coverage = measures.find(
+      (measure) => measure.metric === "coverage"
+    ).value;
+    const securityHotspots = measures.find(
+      (measure) => measure.metric === "security_hotspots"
+    ).value;
+
+    const transformedProject = {
+      ...project,
+      id: project._id,
+      sonarInfo: {
+        debt,
+        codeSmells,
+        bugs,
+        vulnerabilities,
+        securityHotspots,
+        coverage,
+      },
+    };
+    delete transformedProject._id;
+
+    return transformedProject;
+  });
+
+  if (byCoverage === "high" || byCoverage === "low") {
+    resultProjects = resultProjects.filter((resultProject) =>
+      byCoverage === "low"
+        ? resultProject.sonarInfo.coverage < 80
+        : resultProject.sonarInfo.coverage >= 80
+    );
+  }
 
   res.json({
-    projects: projects.map((project, position) => {
-      const { measures } = projectsMeasures[position].data.component;
-      const debt = measures.find(
-        (measure) => measure.metric === "sqale_index"
-      ).value;
-      const codeSmells = measures.find(
-        (measure) => measure.metric === "code_smells"
-      ).value;
-      const bugs = measures.find((measure) => measure.metric === "bugs").value;
-      const vulnerabilities = measures.find(
-        (measure) => measure.metric === "vulnerabilities"
-      ).value;
-      const coverage = measures.find(
-        (measure) => measure.metric === "coverage"
-      ).value;
-      const securityHotspots = measures.find(
-        (measure) => measure.metric === "security_hotspots"
-      ).value;
-
-      return {
-        ...project,
-        sonarInfo: {
-          debt,
-          codeSmells,
-          bugs,
-          vulnerabilities,
-          securityHotspots,
-          coverage,
-        },
-      };
-    }),
+    projects: resultProjects,
   });
 };
 
