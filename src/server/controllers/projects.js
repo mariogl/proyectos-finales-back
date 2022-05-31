@@ -23,46 +23,86 @@ const getProjects = async (req, res) => {
     .populate("tutor", "-password -username")
     .lean();
 
-  const projectsPromises = [];
+  const projectsFrontPromises = [];
+  const projectsBackPromises = [];
 
   projects.forEach((project) => {
-    projectsPromises.push(
+    projectsFrontPromises.push(
       axios.get(
         `https://sonarcloud.io/api/measures/component?component=${project.sonarKey.front}&metricKeys=sqale_index,code_smells,bugs,vulnerabilities,security_hotspots,coverage`
       )
     );
+    projectsBackPromises.push(
+      axios.get(
+        `https://sonarcloud.io/api/measures/component?component=${project.sonarKey.back}&metricKeys=sqale_index,code_smells,bugs,vulnerabilities,security_hotspots,coverage`
+      )
+    );
   });
 
-  const projectsMeasures = await Promise.all(projectsPromises);
+  const projectsFrontMeasures = await Promise.all(projectsFrontPromises);
+  const projectsBackMeasures = await Promise.all(projectsBackPromises);
+
   let resultProjects = projects.map((project, position) => {
-    const { measures } = projectsMeasures[position].data.component;
-    const debt = measures.find(
+    const { measures: measuresFront } =
+      projectsFrontMeasures[position].data.component;
+    const { measures: measuresBack } =
+      projectsBackMeasures[position].data.component;
+
+    const debtFront = measuresFront.find(
       (measure) => measure.metric === "sqale_index"
     ).value;
-    const codeSmells = measures.find(
+    const codeSmellsFront = measuresFront.find(
       (measure) => measure.metric === "code_smells"
     ).value;
-    const bugs = measures.find((measure) => measure.metric === "bugs").value;
-    const vulnerabilities = measures.find(
+    const bugsFront = measuresFront.find(
+      (measure) => measure.metric === "bugs"
+    ).value;
+    const vulnerabilitiesFront = measuresFront.find(
       (measure) => measure.metric === "vulnerabilities"
     ).value;
-    const coverage = measures.find(
+    const coverageFront = measuresFront.find(
       (measure) => measure.metric === "coverage"
+    )?.value;
+    const securityHotspotsFront = measuresFront.find(
+      (measure) => measure.metric === "security_hotspots"
     ).value;
-    const securityHotspots = measures.find(
+    const debtBack = measuresBack.find(
+      (measure) => measure.metric === "sqale_index"
+    ).value;
+    const codeSmellsBack = measuresBack.find(
+      (measure) => measure.metric === "code_smells"
+    ).value;
+    const bugsBack = measuresBack.find(
+      (measure) => measure.metric === "bugs"
+    ).value;
+    const vulnerabilitiesBack = measuresBack.find(
+      (measure) => measure.metric === "vulnerabilities"
+    ).value;
+    const coverageBack = measuresBack.find(
+      (measure) => measure.metric === "coverage"
+    )?.value;
+    const securityHotspotsBack = measuresBack.find(
       (measure) => measure.metric === "security_hotspots"
     ).value;
 
     const transformedProject = {
       ...project,
       id: project._id,
-      sonarInfo: {
-        debt,
-        codeSmells,
-        bugs,
-        vulnerabilities,
-        securityHotspots,
-        coverage,
+      sonarInfoFront: {
+        debt: debtFront,
+        codeSmells: codeSmellsFront,
+        bugs: bugsFront,
+        vulnerabilities: vulnerabilitiesFront,
+        securityHotspots: securityHotspotsFront,
+        coverage: coverageFront,
+      },
+      sonarInfoBack: {
+        debt: debtBack,
+        codeSmells: codeSmellsBack,
+        bugs: bugsBack,
+        vulnerabilities: vulnerabilitiesBack,
+        securityHotspots: securityHotspotsBack,
+        coverage: coverageBack,
       },
     };
     delete transformedProject._id;
@@ -84,21 +124,18 @@ const getProjects = async (req, res) => {
 };
 
 const createProject = async (req, res) => {
-  const { challenge, name, student, trello, tutor, folder } = req.body;
-
-  const slug = student.replaceAll(" ", "-");
+  const { challenge, name, student, trello, tutor, repo, sonarKey, prod } =
+    req.body;
 
   const createdProject = await Project.create({
     challenge,
     name,
     student,
     trello,
-    folder,
-    repo: {
-      front: `${slug}_Front-${process.env.GIT_REPO_SUFIX}`,
-      back: `${slug}_Back-${process.env.GIT_REPO_SUFIX}`,
-    },
+    repo,
     tutor,
+    prod,
+    sonarKey,
   });
   res.status(201);
   res.json({
