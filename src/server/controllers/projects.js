@@ -113,8 +113,10 @@ const getProjects = async (req, res) => {
   if (byCoverage === "high" || byCoverage === "low") {
     resultProjects = resultProjects.filter((resultProject) =>
       byCoverage === "low"
-        ? resultProject.sonarInfo.coverage < 80
-        : resultProject.sonarInfo.coverage >= 80
+        ? resultProject.sonarInfoFront.coverage < 80 ||
+          resultProject.sonarInfoBack.coverage < 80
+        : resultProject.sonarInfoFront.coverage >= 80 ||
+          resultProject.sonarInfoBack.coverage >= 80
     );
   }
 
