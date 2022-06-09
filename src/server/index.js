@@ -14,8 +14,16 @@ const { authUserRequestSchema } = require("./schemas/usersSchemas");
 const app = express();
 app.use(
   cors({
-    origin: process.env.ALLOWED_ORIGIN,
-    optionsSuccessStatus: 200,
+    origin: (origin, callback) => {
+      if (
+        origin === process.env.ALLOWED_ORIGIN_LOCAL ||
+        origin === process.env.ALLOWED_ORIGIN_PRODUCTION
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
   })
 );
 app.use(morgan("dev"));
