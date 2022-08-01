@@ -2,9 +2,9 @@ require("dotenv").config();
 const debug = require("debug")("proyectos-api:server:controllers:projects");
 const chalk = require("chalk");
 const { execSync } = require("child_process");
-const axios = require("axios");
 const path = require("path");
 const Project = require("../../database/models/Project");
+const sonarService = require("./sonarService");
 
 const basedir = process.env.BASE_DIR;
 const basedirBack = path.join(basedir, "back");
@@ -23,92 +23,7 @@ const getProjects = async (req, res) => {
     .populate("tutor", "-password -username")
     .lean();
 
-  const projectsFrontPromises = [];
-  const projectsBackPromises = [];
-
-  projects.forEach((project) => {
-    projectsFrontPromises.push(
-      axios.get(
-        `https://sonarcloud.io/api/measures/component?component=${project.sonarKey.front}&metricKeys=sqale_index,code_smells,bugs,vulnerabilities,security_hotspots,coverage`
-      )
-    );
-    projectsBackPromises.push(
-      axios.get(
-        `https://sonarcloud.io/api/measures/component?component=${project.sonarKey.back}&metricKeys=sqale_index,code_smells,bugs,vulnerabilities,security_hotspots,coverage`
-      )
-    );
-  });
-
-  const projectsFrontMeasures = await Promise.all(projectsFrontPromises);
-  const projectsBackMeasures = await Promise.all(projectsBackPromises);
-
-  let resultProjects = projects.map((project, position) => {
-    const { measures: measuresFront } =
-      projectsFrontMeasures[position].data.component;
-    const { measures: measuresBack } =
-      projectsBackMeasures[position].data.component;
-
-    const debtFront = measuresFront.find(
-      (measure) => measure.metric === "sqale_index"
-    ).value;
-    const codeSmellsFront = measuresFront.find(
-      (measure) => measure.metric === "code_smells"
-    ).value;
-    const bugsFront = measuresFront.find(
-      (measure) => measure.metric === "bugs"
-    ).value;
-    const vulnerabilitiesFront = measuresFront.find(
-      (measure) => measure.metric === "vulnerabilities"
-    ).value;
-    const coverageFront = measuresFront.find(
-      (measure) => measure.metric === "coverage"
-    )?.value;
-    const securityHotspotsFront = measuresFront.find(
-      (measure) => measure.metric === "security_hotspots"
-    ).value;
-    const debtBack = measuresBack.find(
-      (measure) => measure.metric === "sqale_index"
-    ).value;
-    const codeSmellsBack = measuresBack.find(
-      (measure) => measure.metric === "code_smells"
-    ).value;
-    const bugsBack = measuresBack.find(
-      (measure) => measure.metric === "bugs"
-    ).value;
-    const vulnerabilitiesBack = measuresBack.find(
-      (measure) => measure.metric === "vulnerabilities"
-    ).value;
-    const coverageBack = measuresBack.find(
-      (measure) => measure.metric === "coverage"
-    )?.value;
-    const securityHotspotsBack = measuresBack.find(
-      (measure) => measure.metric === "security_hotspots"
-    ).value;
-
-    const transformedProject = {
-      ...project,
-      id: project._id,
-      sonarInfoFront: {
-        debt: debtFront,
-        codeSmells: codeSmellsFront,
-        bugs: bugsFront,
-        vulnerabilities: vulnerabilitiesFront,
-        securityHotspots: securityHotspotsFront,
-        coverage: coverageFront,
-      },
-      sonarInfoBack: {
-        debt: debtBack,
-        codeSmells: codeSmellsBack,
-        bugs: bugsBack,
-        vulnerabilities: vulnerabilitiesBack,
-        securityHotspots: securityHotspotsBack,
-        coverage: coverageBack,
-      },
-    };
-    delete transformedProject._id;
-
-    return transformedProject;
-  });
+  let resultProjects = await sonarService(projects);
 
   if (byCoverage === "high" || byCoverage === "low") {
     resultProjects = resultProjects.filter((resultProject) =>

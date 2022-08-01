@@ -17,6 +17,7 @@ app.use(
     origin: (origin, callback) => {
       if (
         origin === process.env.ALLOWED_ORIGIN_LOCAL ||
+        origin === "http://localhost:3001" ||
         origin === process.env.ALLOWED_ORIGIN_PRODUCTION
       ) {
         callback(null, true);
